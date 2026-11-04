@@ -4,6 +4,17 @@ import {occurrences} from './recurrence.mjs';
 const $=s=>document.querySelector(s),$$=s=>[...document.querySelectorAll(s)];
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const cfg=window.ABC_CONFIG;
+const textModes=['standard','large','xlarge'];
+let textMode=textModes.includes(localStorage.getItem('abc-text-size'))?localStorage.getItem('abc-text-size'):'standard';
+function updateTextSize(){
+ document.documentElement.dataset.textSize=textMode;
+ const labels=language==='en'?['Standard','Large','Extra large']:['มาตรฐาน','ใหญ่','ใหญ่มาก'];
+ const label=(language==='en'?'Text size: ':'ขนาดตัวอักษร: ')+labels[textModes.indexOf(textMode)];
+ $('#text-size').textContent=textMode==='standard'?'A+':textMode==='large'?'A++':'A';
+ $('#text-size').title=label;$('#text-size').setAttribute('aria-label',label);
+}
+updateTextSize();
+$('#text-size').onclick=()=>{textMode=textModes[(textModes.indexOf(textMode)+1)%textModes.length];localStorage.setItem('abc-text-size',textMode);updateTextSize();toast($('#text-size').title);};
 let scheduleMode='gantt';
 registerStatic();
 const savedTheme=localStorage.getItem('abc-theme');
@@ -11,7 +22,7 @@ document.documentElement.dataset.theme=savedTheme||(matchMedia('(prefers-color-s
 function updateTheme(){const dark=document.documentElement.dataset.theme==='dark';$('#toggle-theme').textContent=dark?'☀':'☾';$('#toggle-theme').setAttribute('aria-label',language==='en'?(dark?'Switch to light theme':'Switch to dark theme'):(dark?'เปลี่ยนเป็นธีมสว่าง':'เปลี่ยนเป็นธีมมืด'));$('#toggle-theme').setAttribute('aria-pressed',String(dark));}
 updateTheme();
 $('#toggle-theme').onclick=()=>{document.documentElement.dataset.theme=document.documentElement.dataset.theme==='dark'?'light':'dark';localStorage.setItem('abc-theme',document.documentElement.dataset.theme);updateTheme();};
-$('#toggle-language').onclick=()=>{toggleLanguage();updateTheme();$$('#weekdays-input label').forEach((el,i)=>{el.lastChild.textContent=t(['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'][i]);});render();load();if(!$('#admin-view').hidden)showAdmin();};
+$('#toggle-language').onclick=()=>{toggleLanguage();updateTheme();updateTextSize();$$('#weekdays-input label').forEach((el,i)=>{el.lastChild.textContent=t(['อา.','จ.','อ.','พ.','พฤ.','ศ.','ส.'][i]);});render();load();if(!$('#admin-view').hidden)showAdmin();};
 const today=()=>new Date(Date.now()+7*3600000).toISOString().slice(0,10);
 let selected=today(),month=selected.slice(0,7),accounts=[],bookings=[],admin=false,logs=[],cancelId='',receipt=null,loadId=0;
 let session;try{session=JSON.parse(sessionStorage.getItem('abc-admin')||'null');}catch{session=null;}
@@ -36,7 +47,8 @@ async function load(){
  catch(e){if(request!==loadId)return;$('#connection-status').textContent=t('เชื่อมต่อไม่ได้');notice(e.message+' · ข้อมูลบนหน้าจออาจยังไม่เป็นปัจจุบัน');render();}
 }
 function filtered(){const id=$('#filter-account').value;return bookings.filter(b=>!id||b.account_id===id);}
-function card(b){return `<button class="booking-card ${b.status==='CANCELLED'?'cancelled':''}" data-booking="${esc(b.booking_id)}"><small>${esc(b.start_time)}–${esc(b.end_time)} ${language==='en'?'':'น.'} · ${esc(accountName(b.account_id))}</small><b>${esc(t(b.topic))}</b><p>${esc(t(b.full_name))}${b.status==='CANCELLED'?' · '+t('ยกเลิกแล้ว'):''}</p></button>`;}
+const bookerName=b=>String(b.full_name||'').trim()||t('ไม่ระบุชื่อ');
+function card(b){return `<button class="booking-card ${b.status==='CANCELLED'?'cancelled':''}" data-booking="${esc(b.booking_id)}"><small>${esc(b.start_time)}–${esc(b.end_time)} ${language==='en'?'':'น.'} · ${esc(accountName(b.account_id))}</small><b>${t('ผู้จอง')}: ${esc(bookerName(b))}</b><p>${esc(t(b.topic))}${b.status==='CANCELLED'?' · '+t('ยกเลิกแล้ว'):''}</p></button>`;}
 function empty(s){return `<div class="empty"><div class="empty-icon">▦</div><b>${t(s)}</b>${t('เริ่มต้นการเชื่อมต่อครั้งใหม่ด้วยการจอง Zoom')}</div>`;}
 function render(){
  const old=$('#filter-account').value;
@@ -53,7 +65,7 @@ function render(){
  const d=new Date(month+'-01T00:00:00Z');d.setUTCDate(1-d.getUTCDay());const events=filtered().filter(b=>b.status!=='CANCELLED');let html='';
  for(let i=0;i<42;i++,d.setUTCDate(d.getUTCDate()+1)){
   const date=d.toISOString().slice(0,10),bs=events.filter(b=>b.booking_date===date);
-  html+=`<button class="day ${date===selected?'selected':''} ${date===today()?'is-today':''} ${date.slice(0,7)!==month?'other':''}" data-date="${date}" aria-label="${esc(fmt(date))} มี ${bs.length} การจอง"><span class="day-number">${d.getUTCDate()}</span>${bs.slice(0,2).map(b=>`<span class="event-chip">${esc(b.start_time)} ${esc(b.topic)}</span>`).join('')}${bs.length>2?`<span class="event-more">+${bs.length-2} รายการ</span>`:''}</button>`;
+  html+=`<button class="day ${date===selected?'selected':''} ${date===today()?'is-today':''} ${date.slice(0,7)!==month?'other':''}" data-date="${date}" aria-label="${esc(fmt(date))} มี ${bs.length} การจอง"><span class="day-number">${d.getUTCDate()}</span>${bs.slice(0,2).map(b=>`<span class="event-chip">${esc(b.start_time)} ${esc(bookerName(b))}</span>`).join('')}${bs.length>2?`<span class="event-more">+${bs.length-2} รายการ</span>`:''}</button>`;
  }
  $('#calendar').innerHTML=html;renderDay();renderList();
 }
@@ -73,7 +85,7 @@ function credentialsHtml(c){return c?'<h3>'+t('ข้อมูลเข้าส
 function openCredentials(id){credentialId=id;$('#detail-dialog').close();$('#credentials-form').reset();if(!canManage(id)){toast(t('กรุณาใช้เบราว์เซอร์ที่จอง หรือติดต่อผู้ดูแล'));return;}$('#credentials-error').textContent='';$('#credentials-result').hidden=true;$('#credentials-result').innerHTML='';$('#credentials-dialog').showModal();}
 $('#credentials-form').onsubmit=e=>{e.preventDefault();submit(e.target,'#credentials-error',async()=>{const c=await api('credentials',{id:credentialId,code:right(credentialId)?.token||'',admin,name:admin?'Admin':right(credentialId)?.name||''});$('#credentials-result').innerHTML=credentialsHtml(c);$('#credentials-result').hidden=false;});};
 $('#credentials-dialog').addEventListener('close',()=>{$('#credentials-result').innerHTML='';$('#credentials-form').reset();});
-function detail(id){const b=bookings.find(x=>x.booking_id===id);if(!b)return;$('#booking-detail').innerHTML=[['หัวข้อ',b.topic],['ผู้จอง',b.full_name],['การใช้งาน',b.purpose],['บัญชี',accountName(b.account_id)],['วันที่',fmt(b.booking_date)],['เวลา',b.start_time+'–'+b.end_time+' น.'],['สถานะ',b.status==='CANCELLED'?'ยกเลิกแล้ว':'ยืนยันการจอง']].map(([k,v])=>`<div class="detail-row"><span>${t(k)}</span><b>${esc(t(v))}</b></div>`).join('')+(b.status!=='CANCELLED'?`<div class="dialog-actions" style="margin-top:20px">${canManage(id)?`<button class="secondary" data-credentials="${esc(id)}">${t('ข้อมูลเข้าสู่ระบบ Zoom')}</button>`:''}<button class="danger" data-cancel="${esc(id)}">${t('ยกเลิกการจอง')}</button></div>`:'');$('#detail-dialog').showModal();}
+function detail(id){const b=bookings.find(x=>x.booking_id===id);if(!b)return;$('#booking-detail').innerHTML=[['หัวข้อ',b.topic],['ผู้จอง',bookerName(b)],['การใช้งาน',b.purpose],['บัญชี',accountName(b.account_id)],['วันที่',fmt(b.booking_date)],['เวลา',b.start_time+'–'+b.end_time+' น.'],['สถานะ',b.status==='CANCELLED'?'ยกเลิกแล้ว':'ยืนยันการจอง']].map(([k,v])=>`<div class="detail-row"><span>${t(k)}</span><b>${esc(t(v))}</b></div>`).join('')+(b.status!=='CANCELLED'?`<div class="dialog-actions" style="margin-top:20px">${canManage(id)?`<button class="secondary" data-credentials="${esc(id)}">${t('ข้อมูลเข้าสู่ระบบ Zoom')}</button>`:''}<button class="danger" data-cancel="${esc(id)}">${t('ยกเลิกการจอง')}</button></div>`:'');$('#detail-dialog').showModal();}
 function openCancel(id){cancelId=id;$('#detail-dialog').close();$('#cancel-form').reset();$('#cancel-error').textContent='';$('#cancel-form').elements.name.value=right(id)?.name||'';$('#cancel-dialog').showModal();}
 async function submit(form,errorId,fn){const b=form.querySelector('button[type="submit"],button.primary:not([type]),button.danger');if(b)b.disabled=true;$(errorId).textContent='';try{await fn();}catch(e){$(errorId).textContent=t(e.message);}finally{if(b)b.disabled=false;}}
 $('#booking-form').onsubmit=e=>{e.preventDefault();submit(e.target,'#booking-error',async()=>{
@@ -120,7 +132,7 @@ function renderGantt(){
  let html='<div class="gantt-head"><div class="gantt-account-head">'+t('บัญชี Zoom')+'</div><div class="gantt-hours">'+ticks+'</div></div>';
  const minutes=s=>Number(s.slice(0,2))*60+Number(s.slice(3,5));
  for(const a of aa){const bs=bookings.filter(b=>b.account_id===a.account_id&&b.booking_date===selected);const current=new Date(Date.now()+7*3600000);const now=(current.getUTCHours()*60+current.getUTCMinutes())/1440*100;
- html+='<div class="gantt-row"><div class="gantt-account"><b>'+esc(a.account_id)+'</b><span>'+esc(branchName(a))+'</span><small class="'+(active(a)?'':'closed')+'">'+t(active(a)?'เปิดให้จอง':'บัญชีปิดให้จอง')+'</small></div><div class="gantt-track">'+(selected===today()?'<div class="now-line" style="left:'+now+'%" aria-label="'+(language==='en'?'Current time':'เวลาปัจจุบัน')+'"></div>':'')+bs.map(b=>'<button data-booking="'+esc(b.booking_id)+'" class="gantt-bar '+(b.status==='CANCELLED'?'is-cancelled':'')+'" style="left:'+minutes(b.start_time)/1440*100+'%;width:'+Math.max(.5,(minutes(b.end_time)-minutes(b.start_time))/1440*100)+'%" title="'+esc(b.start_time+'–'+b.end_time+' '+t(b.topic))+'" aria-label="'+esc(accountName(b.account_id)+' '+b.start_time+'–'+b.end_time+' '+t(b.status==='CANCELLED'?'ยกเลิกแล้ว':'ยืนยันแล้ว'))+'"><span>'+esc(b.start_time+'–'+b.end_time)+'</span></button>').join('')+'</div></div>';
+ html+='<div class="gantt-row"><div class="gantt-account"><b>'+esc(a.account_id)+'</b><span>'+esc(branchName(a))+'</span><small class="'+(active(a)?'':'closed')+'">'+t(active(a)?'เปิดให้จอง':'บัญชีปิดให้จอง')+'</small></div><div class="gantt-track">'+(selected===today()?'<div class="now-line" style="left:'+now+'%" aria-label="'+(language==='en'?'Current time':'เวลาปัจจุบัน')+'"></div>':'')+bs.map(b=>'<button data-booking="'+esc(b.booking_id)+'" class="gantt-bar '+(b.status==='CANCELLED'?'is-cancelled':'')+'" style="left:'+minutes(b.start_time)/1440*100+'%;width:'+Math.max(.5,(minutes(b.end_time)-minutes(b.start_time))/1440*100)+'%" title="'+esc(b.start_time+'–'+b.end_time+' · '+t('ผู้จอง')+': '+bookerName(b))+'" aria-label="'+esc(accountName(b.account_id)+' '+b.start_time+'–'+b.end_time+' '+t('ผู้จอง')+': '+bookerName(b)+' '+t(b.status==='CANCELLED'?'ยกเลิกแล้ว':'ยืนยันแล้ว'))+'"><span>'+esc(b.start_time+'–'+b.end_time+' · '+bookerName(b))+'</span></button>').join('')+'</div></div>';
  }
  $('#gantt').innerHTML=aa.length?html:empty('ยังไม่มีบัญชีที่เปิดให้จอง กรุณาติดต่อผู้ดูแล');
 }
