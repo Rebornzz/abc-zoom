@@ -1,5 +1,10 @@
 export let language=localStorage.getItem('abc-language')==='en'?'en':'th';
 const pairs=[
+['สร้างการจองซ้ำ','Create a recurring booking'],['ช่วยกันรักษาเวลาของทุกคน','Respect everyone’s time'],['เปลี่ยนรหัสผ่านแล้ว','Password updated'],
+['เพิ่มบัญชี','Add account'],['เพิ่มบัญชี Zoom','Add Zoom account'],['แก้ไขข้อมูล','Edit account'],['ปีงบประมาณ','Fiscal year'],['ปีงบประมาณ (พ.ศ.)','Fiscal year (B.E.)'],['เช่น 2570','e.g. 2570'],['ยกเลิกการแก้ไข','Cancel editing'],['แสดงรหัสผ่าน','Show password'],['ซ่อนรหัสผ่าน','Hide password'],['ไม่ระบุหัวข้อ','No topic provided'],['ปีงบประมาณไม่ถูกต้อง','Invalid fiscal year'],['กรุณาตั้งรหัสผ่านสำหรับบัญชีใหม่','Set a password for the new account'],
+['เลือกบัญชีเพื่อแก้ไขข้อมูลสำหรับปีงบประมาณใหม่ ประวัติการจองเดิมจะยังอยู่ครบ','Select an account to update it for the new fiscal year. Existing booking history is preserved.'],
+['เว้นรหัสผ่านว่างเพื่อใช้ค่าเดิม เปลี่ยนปีงบประมาณและข้อมูลบัญชีได้โดยไม่กระทบประวัติการจอง','Leave the password blank to keep it. Update the fiscal year and account details without affecting booking history.'],
+
 ['ยกเลิกได้ทุกอุปกรณ์','Cancel from any device'],
 ['ยกเลิกได้จากทุกอุปกรณ์ เพียงกรอกชื่อผู้ยกเลิกและเหตุผล ระบบบันทึกประวัติให้ผู้ดูแลตรวจสอบ','Cancel from any device by entering your name and reason. Administrators can review the activity log.'],
 ['จองสำเร็จแล้ว ยกเลิกได้ทุกอุปกรณ์โดยไม่ต้องใช้รหัส','Booking confirmed. Cancel from any device without a code.'],
