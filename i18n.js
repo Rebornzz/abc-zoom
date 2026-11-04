@@ -1,5 +1,11 @@
 export let language=localStorage.getItem('abc-language')==='en'?'en':'th';
 const pairs=[
+['ยกเลิกได้ทุกอุปกรณ์','Cancel from any device'],
+['ยกเลิกได้จากทุกอุปกรณ์ เพียงกรอกชื่อผู้ยกเลิกและเหตุผล ระบบบันทึกประวัติให้ผู้ดูแลตรวจสอบ','Cancel from any device by entering your name and reason. Administrators can review the activity log.'],
+['จองสำเร็จแล้ว ยกเลิกได้ทุกอุปกรณ์โดยไม่ต้องใช้รหัส','Booking confirmed. Cancel from any device without a code.'],
+['เปิดรายการจอง กรอกชื่อผู้ยกเลิกและเหตุผล แล้วกดยืนยัน ระบบเก็บประวัติทุกครั้ง','Open a booking, enter your name and reason, and confirm. Every cancellation is logged.'],
+['บันทึกการจองแล้ว หากต้องการดูข้อมูล Zoom อีกครั้ง กรุณาติดต่อผู้ดูแล','Booking saved. Contact an administrator if you need the Zoom sign-in details again.'],
+
 ['ยกเลิกง่ายจากเบราว์เซอร์ที่จอง','Cancel easily from the browser you booked with'],
 ['เข้าสู่ระบบสำหรับผู้ดูแล','Administrator sign-in'],
 ['ระบบจำสิทธิ์การจองในเบราว์เซอร์นี้ให้อัตโนมัติ ยกเลิกได้โดยไม่ต้องกรอกรหัส หากเปลี่ยนเบราว์เซอร์หรือล้างข้อมูล ให้ติดต่อผู้ดูแล','This browser remembers your booking permission automatically. Cancel without entering a code. If you change browsers or clear browser data, contact an administrator.'],
